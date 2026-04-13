@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flow, Grids & Bars — Music Theory Through Rap</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --deep: #111111;
+    --panel: #161616;
+    --border: #2a2a2a;
+    --gold: #f0b429;
+    --gold-dim: #8a6615;
+    --red: #e63946;
+    --cyan: #00f5d4;
+    --purple: #9b5de5;
+    --white: #f0ede8;
+    --muted: #666;
+    --active-cell: #f0b429;
+    --inactive-cell: #1e1e1e;
+    --beat-pulse: #e63946;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .masthead {
+    border-bottom: 3px solid var(--gold);
+    padding: 28px 40px 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 20px;
+  }
+
+  .masthead-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.4rem, 6vw, 5rem);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    color: var(--white);
+  }
+
+  .masthead-title span {
+    color: var(--gold);
+  }
+
+  .masthead-sub {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .bpm-display {
+    text-align: right;
+  }
+
+  .bpm-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .bpm-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    overflow-x: auto;
+  }
+
+  .tab {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 14px 22px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    color: var(--muted);
+    transition: all 0.15s;
+    white-space: nowrap;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .tab:hover { color: var(--white); }
+  .tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* LAYOUT */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0;
+    min-height: calc(100vh - 140px);
+  }
+
+  .main-panel {
+    border-right: 1px solid var(--border);
+    padding: 32px 40px;
+  }
+
+  .sidebar {
+    padding: 28px 24px;
+    background: var(--deep);
+  }
+
+  /* SECTION HEADERS */
+  .section-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* PANELS */
+  .panel-view { display: none; }
+  .panel-view.active { display: block; }
+
+  /* ===== SEQUENCER ===== */
+  .seq-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--white);
+    transition: all 0.12s;
+  }
+
+  .btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .btn.primary {
+    background: var(--gold);
+    color: var(--black);
+    border-color: var(--gold);
+    font-weight: 700;
+  }
+
+  .btn.primary:hover { background: #d4991f; }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+  .btn.danger:hover { background: var(--red); color: var(--white); }
+
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .slider-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100px;
+    height: 3px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--gold);
+    cursor: pointer;
+    border-radius: 0;
+  }
+
+  .slider-val {
+    font-size: 0.7rem;
+    color: var(--gold);
+    min-width: 30px;
+  }
+
+  /* GRID */
+  .seq-grid {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .seq-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .seq-row-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    width: 52px;
+    flex-shrink: 0;
+    text-align: right;
+    padding-right: 10px;
+  }
+
+  .seq-cell {
+    width: 36px;
+    height: 36px;
+    background: var(--inactive-cell);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.08s, transform 0.08s;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .seq-cell:hover { border-color: var(--gold-dim); background: #2a2a2a; }
+  .seq-cell.on { background: var(--active-cell); border-color: var(--gold); }
+  .seq-cell.beat-4 { border-left: 2px solid #333; }
+  .seq-cell.playing { background: var(--beat-pulse) !important; transform: scale(1.1); z-index: 1; }
+  .seq-cell.on.playing { background: #fff !important; }
+
+  /* step number row */
+  .step-numbers {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+    margin-left: 62px;
+  }
+
+  .step-num {
+    width: 36px;
+    text-align: center;
+    font-size: 0.5rem;
+    color: var(--border);
+    flex-shrink: 0;
+  }
+
+  .step-num.beat-marker { color: var(--muted); }
+
+  /* Theory callout below grid */
+  .theory-callout {
+    margin-top: 24px;
+    border-left: 3px solid var(--gold);
+    padding: 14px 18px;
+    background: var(--panel);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: #bbb;
+  }
+
+  .theory-callout strong { color: var(--gold); }
+
+  /* ===== LYRIC GRID ===== */
+  .lyric-verse {
+    margin-bottom: 36px;
+  }
+
+  .verse-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .lyric-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 12px;
+    align-items: baseline;
+  }
+
+  .syllable {
+    display: inline-block;
+    padding: 4px 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.12s;
+    position: relative;
+    background: var(--panel);
+  }
+
+  .syllable:hover { border-color: var(--white); }
+
+  .syllable.rhyme-a { border-color: #e63946; color: #e63946; background: rgba(230,57,70,0.08); }
+  .syllable.rhyme-b { border-color: #00f5d4; color: #00f5d4; background: rgba(0,245,212,0.08); }
+  .syllable.rhyme-c { border-color: #9b5de5; color: #9b5de5; background: rgba(155,93,229,0.08); }
+  .syllable.rhyme-d { border-color: #f77f00; color: #f77f00; background: rgba(247,127,0,0.08); }
+  .syllable.rhyme-e { border-color: #06d6a0; color: #06d6a0; background: rgba(6,214,160,0.08); }
+  .syllable.rhyme-f { border-color: #e63946; color: #e63946; background: rgba(230,57,70,0.12); }
+  .syllable.rhyme-g { border-color: #00f5d4; color: #00f5d4; background: rgba(0,245,212,0.12); }
+  .syllable.rhyme-h { border-color: #9b5de5; color: #9b5de5; background: rgba(155,93,229,0.12); }
+  .syllable.rhyme-i { border-color: #f77f00; color: #f77f00; background: rgba(247,127,0,0.12); }
+  .syllable.rhyme-j { border-color: #06d6a0; color: #06d6a0; background: rgba(6,214,160,0.12); }
+  .syllable.rhyme-k { border-color: #e63946; color: #e63946; background: rgba(230,57,70,0.16); }
+  .syllable.rhyme-l { border-color: #f0b429; color: #f0b429; background: rgba(240,180,41,0.12); }
+  .syllable.accent { font-weight: 700; transform: scale(1.05); }
+  .syllable.beat { border-bottom: 3px solid var(--gold); }
+  .syllable.lit {
+    animation: syllableFlash 0.25s ease;
+  }
+
+  @keyframes syllableFlash {
+    0% { background: var(--gold); color: var(--black); border-color: var(--gold); }
+    100% { background: inherit; }
+  }
+
+  /* Scheme legend */
+  .scheme-legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 0;
+  }
+
+  /* ===== THEORY MAP ===== */
+  .theory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .theory-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .theory-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--gold);
+    transform: scaleY(0);
+    transition: transform 0.15s;
+    transform-origin: top;
+  }
+
+  .theory-card:hover::before { transform: scaleY(1); }
+  .theory-card:hover { border-color: var(--gold-dim); }
+
+  .card-concept {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .card-ui {
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .card-desc {
+    font-size: 0.68rem;
+    color: #888;
+    line-height: 1.55;
+  }
+
+  .card-rap {
+    margin-top: 12px;
+    padding: 8px 10px;
+    background: rgba(240,180,41,0.06);
+    border-left: 2px solid var(--gold);
+    font-size: 0.62rem;
+    color: var(--gold-dim);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* ===== PRODUCTION NOTES ===== */
+  .prod-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .prod-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+
+  .prod-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .prod-sub {
+    font-size: 0.58rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+
+  /* EQ Visual */
+  .eq-bars {
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    height: 80px;
+    margin-bottom: 12px;
+  }
+
+  .eq-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .eq-bar {
+    width: 100%;
+    background: var(--gold);
+    transition: height 0.3s ease;
+    min-height: 4px;
+    cursor: ns-resize;
+  }
+
+  .eq-freq {
+    font-size: 0.45rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Swing slider */
+  .swing-visual {
+    margin: 16px 0;
+    position: relative;
+    height: 40px;
+  }
+
+  .swing-grid {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .swing-tick {
+    width: 8px;
+    background: var(--border);
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+
+  .swing-tick.on { background: var(--cyan); }
+  .swing-tick.swung { background: var(--purple); }
+
+  /* Waveform */
+  .waveform-container {
+    height: 60px;
+    background: var(--deep);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 2px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+
+  .wave-bar {
+    flex: 1;
+    background: var(--cyan);
+    transition: height 0.2s;
+    opacity: 0.7;
+  }
+
+  /* SIDEBAR */
+  .sidebar-section {
+    margin-bottom: 32px;
+  }
+
+  .sidebar-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Circle of Fifths mini */
+  .circle-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  canvas#circleCanvas {
+    cursor: pointer;
+  }
+
+  /* Key info */
+  .key-info {
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .key-chords {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .chord-pill {
+    font-size: 0.65rem;
+    padding: 4px 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.12s;
+    letter-spacing: 0.05em;
+  }
+
+  .chord-pill:hover, .chord-pill.active {
+    background: var(--gold);
+    color: var(--black);
+    border-color: var(--gold);
+  }
+
+  /* Interval display */
+  .interval-row {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 10px;
+  }
+
+  .interval-cell {
+    flex: 1;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.12s;
+    background: var(--panel);
+  }
+
+  .interval-cell:hover, .interval-cell.lit {
+    background: var(--gold);
+    color: var(--black);
+    border-color: var(--gold);
+  }
+
+  /* Density meter */
+  .density-meter {
+    margin-top: 10px;
+  }
+
+  .density-bar-outer {
+    height: 8px;
+    background: var(--border);
+    margin-bottom: 4px;
+    position: relative;
+  }
+
+  .density-bar-inner {
+    height: 100%;
+    background: var(--gold);
+    transition: width 0.4s ease;
+  }
+
+  .density-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.55rem;
+    color: var(--muted);
+  }
+
+  /* FOOTER */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.55rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .footer a { color: var(--gold-dim); text-decoration: none; }
+  .footer a:hover { color: var(--gold); }
+
+  /* PULSE ANIMATION for playing indicator */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .playing-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--red);
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse 0.5s infinite;
+  }
+
+  .playing-dot.stopped { background: var(--muted); animation: none; }
+
+  /* Tooltip */
+  .tooltip-wrap { position: relative; display: inline-block; }
+  .tooltip-text {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    padding: 6px 10px;
+    font-size: 0.6rem;
+    white-space: nowrap;
+    z-index: 100;
+    color: var(--white);
+    pointer-events: none;
+  }
+  .tooltip-wrap:hover .tooltip-text { display: block; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+  @media (max-width: 900px) {
+    .workspace { grid-template-columns: 1fr; }
+    .sidebar { border-top: 1px solid var(--border); }
+    .masthead { padding: 20px 20px 16px; }
+    .main-panel { padding: 24px 20px; }
+    .prod-grid { grid-template-columns: 1fr; }
+    .nav-tabs { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div>
+    <div class="masthead-title">Flow, <span>Grids</span><br>& Bars</div>
+    <div class="masthead-sub">Dynamic UI · Music Theory · Hip-Hop Pedagogy</div>
+  </div>
+  <div class="bpm-display">
+    <div class="bpm-number" id="bpmDisplay">90</div>
+    <div class="bpm-label">BPM</div>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="tab active" data-panel="sequencer">Step Sequencer</button>
+  <button class="tab" data-panel="lyrics">Rhyme Grid</button>
+  <button class="tab" data-panel="theory">Theory Map</button>
+  <button class="tab" data-panel="production">Production Notes</button>
+</nav>
+
+<div class="workspace">
+  <main class="main-panel">
+
+    <!-- ===== SEQUENCER ===== -->
+    <div id="panel-sequencer" class="panel-view active">
+      <div class="section-label">Beat Sequencer — 16 Steps</div>
+
+      <div class="seq-controls">
+        <button class="btn primary" id="playBtn">▶ Play</button>
+        <button class="btn danger" id="clearBtn">Clear</button>
+        <button class="btn" id="presetBtn">Load Boom-Bap</button>
+        <button class="btn" id="swingPreset">Load Syncopated</button>
+
+        <div class="slider-group">
+          <span class="slider-label">BPM</span>
+          <input type="range" id="bpmSlider" min="60" max="140" value="90">
+          <span class="slider-val" id="bpmVal">90</span>
+        </div>
+
+        <div class="slider-group">
+          <span class="slider-label">Swing</span>
+          <input type="range" id="swingSlider" min="0" max="100" value="0">
+          <span class="slider-val" id="swingVal">0%</span>
+        </div>
+
+        <span style="font-size:0.65rem; color:var(--muted)">
+          <span class="playing-dot stopped" id="playDot"></span>
+          <span id="playStatus">Stopped</span>
+        </span>
+      </div>
+
+      <div class="step-numbers" id="stepNumbers"></div>
+
+      <div class="seq-grid" id="seqGrid"></div>
+
+      <div class="theory-callout" id="theoryCallout">
+        <strong>Rhythm & Meter:</strong> Each row is an instrument; each column is a 16th-note subdivision.
+        4 columns = 1 beat. Activate cells to hear how placement creates groove, accent, and syncopation.
+        The <strong>Swing</strong> slider offsets even-numbered 16ths — turn it up to hear how small timing shifts humanize a rigid grid.
+      </div>
+    </div>
+
+    <!-- ===== LYRIC GRID ===== -->
+    <div id="panel-lyrics" class="panel-view">
+      <div class="section-label">Rhyme Scheme Visualizer — "That Dress" V2 (RyanrealAF)</div>
+
+      <div class="scheme-legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#e63946"></div>A — way/day</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#00f5d4"></div>B — grin/then</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#9b5de5"></div>C — slid/did</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#f77f00"></div>D — neck/check</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--gold); width:10px; height:3px; margin-bottom:4px;"></div>Beat</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--white)"></div>Accented</div>
+      </div>
+
+      <div id="lyricDisplay"></div>
+
+      <div class="seq-controls" style="margin-top:20px">
+        <button class="btn primary" id="animateBtn">▶ Animate Flow</button>
+        <button class="btn" id="stopAnimBtn">■ Stop</button>
+        <div class="slider-group">
+          <span class="slider-label">Flow Speed</span>
+          <input type="range" id="flowSlider" min="60" max="200" value="90">
+          <span class="slider-val" id="flowVal">90</span>
+        </div>
+      </div>
+
+      <div class="density-meter" style="margin-top:20px">
+        <div class="section-label">Rhyme Density</div>
+        <div id="densityBars"></div>
+      </div>
+
+      <div class="theory-callout" style="margin-top:20px">
+        <strong>Flow & Cadence:</strong> Color groups reveal rhyme scheme architecture (AABB, ABBA, multi-syllabic).
+        <strong>Bold</strong> syllables land on the beat. Click any syllable to see its function.
+        Density bars show syllables-per-bar — the tighter the fill, the more complex the flow.
+      </div>
+    </div>
+
+    <!-- ===== THEORY MAP ===== -->
+    <div id="panel-theory" class="panel-view">
+      <div class="section-label">Concept → UI Element → Rap Metaphor</div>
+      <div class="theory-grid" id="theoryGrid"></div>
+
+      <div class="theory-callout">
+        <strong>Hip-Hop Pedagogy:</strong> Each concept maps directly to a UI element you can touch and a rap metaphor
+        you can hear. Theory isn't abstract — it's the architecture behind every bar you've memorized.
+        Click any card to expand the production connection.
+      </div>
+    </div>
+
+    <!-- ===== PRODUCTION NOTES ===== -->
+    <div id="panel-production" class="panel-view">
+      <div class="section-label">Production Techniques as Teaching Tools</div>
+
+      <div class="prod-grid">
+        <div class="prod-panel">
+          <div class="prod-title">EQ / Timbre</div>
+          <div class="prod-sub">Frequency shaping · Spectral analysis</div>
+          <div class="eq-bars" id="eqBars"></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
+            <button class="btn" style="font-size:0.55rem; padding:6px 12px;" onclick="presetEQ('flat')">Flat</button>
+            <button class="btn" style="font-size:0.55rem; padding:6px 12px;" onclick="presetEQ('bass')">Bass Boost</button>
+            <button class="btn" style="font-size:0.55rem; padding:6px 12px;" onclick="presetEQ('vocal')">Vocal Presence</button>
+          </div>
+          <div class="theory-callout" style="margin-top:14px; font-size:0.68rem;">
+            <strong>Theory:</strong> EQ shapes <em>timbre</em> — the color of sound.
+            Boosting ~3kHz adds vocal punch; cutting <100Hz removes mud. Same as choosing chord voicings — every frequency decision is intentional.
+          </div>
+        </div>
+
+        <div class="prod-panel">
+          <div class="prod-title">Swing / Quantize</div>
+          <div class="prod-sub">Groove · Timing · Human feel</div>
+          <div class="swing-visual">
+            <div class="swing-grid" id="swingViz"></div>
+          </div>
+          <div class="slider-group" style="margin-top:12px">
+            <span class="slider-label">Groove</span>
+            <input type="range" id="grooveSlider" min="0" max="100" value="0" style="width:140px">
+            <span class="slider-val" id="grooveVal">0%</span>
+          </div>
+          <div class="theory-callout" style="margin-top:14px; font-size:0.68rem;">
+            <strong>Theory:</strong> Quantization snaps notes to the grid (<em>meter</em>).
+            Swing shifts even 16ths forward, creating the push-pull feel of boom-bap.
+            It's syncopation made visible — the off-beat arrives <em>just</em> late, adding tension.
+          </div>
+        </div>
+
+        <div class="prod-panel">
+          <div class="prod-title">Sampling</div>
+          <div class="prod-sub">Layering · Arrangement · Recontextualization</div>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-top:4px" id="sampleLayers"></div>
+          <div class="theory-callout" style="margin-top:14px; font-size:0.68rem;">
+            <strong>Theory:</strong> Sampling is <em>arrangement</em> in real time. Each layer occupies frequency space.
+            Stack a bass sample, a chord stab, and a drum break — you're building texture, harmony, and rhythm simultaneously.
+          </div>
+        </div>
+
+        <div class="prod-panel">
+          <div class="prod-title">Waveform / Dynamics</div>
+          <div class="prod-sub">Amplitude · Attack · Decay</div>
+          <div class="waveform-container" id="waveformViz"></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px">
+            <button class="btn" style="font-size:0.55rem; padding:6px 12px;" onclick="setWave('kick')">Kick</button>
+            <button class="btn" style="font-size:0.55rem; padding:6px 12px;" onclick="setWave('snare')">Snare</button>
+            <button class="btn" style="font-size:0.55rem; padding:6px 12px;" onclick="setWave('vocal')">Vocal Chop</button>
+          </div>
+          <div class="theory-callout" style="margin-top:14px; font-size:0.68rem;">
+            <strong>Theory:</strong> Waveforms visualize <em>dynamics</em> — the attack is the left spike, the decay is the tail.
+            A kick's short tail vs a pad's long release is the difference between <em>staccato</em> and <em>legato</em> in classical terms.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Circle of Fifths</div>
+      <div class="circle-wrap">
+        <canvas id="circleCanvas" width="240" height="240"></canvas>
+      </div>
+      <div class="key-info" id="keyInfo">C Major</div>
+      <div class="key-chords" id="keyChords"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Scale Intervals</div>
+      <div class="interval-row" id="intervalRow"></div>
+      <div style="font-size:0.62rem; color:var(--muted); line-height:1.5; margin-top:8px;">
+        Click a degree to hear its position in the scale.
+        <strong style="color:var(--gold)">W</strong> = Whole step, <strong style="color:var(--gold)">H</strong> = Half step.
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Syllable Density</div>
+      <div id="sidebarDensity"></div>
+      <div style="font-size:0.6rem; color:var(--muted); margin-top:10px; line-height:1.5;">
+        "That Dress" V2 — stanza 1 avg 10.7 syl/bar. Stanza 2 peaks at 13 (Bar 14). Eminem's peak: ~12.
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<footer class="footer">
+  <span>FLOW, GRIDS & BARS — Music Theory Through Rap &amp; Dynamic UI</span>
+  <span><a href="#">buildwhilebleeding.com</a> · RyanrealAF</span>
+</footer>
+
+<script>
+// ==================== DATA ====================
+
+const INSTRUMENTS = [
+  { name: 'Kick',   color: '#f0b429' },
+  { name: 'Snare',  color: '#e63946' },
+  { name: 'Hi-Hat', color: '#00f5d4' },
+  { name: 'Clap',   color: '#9b5de5' },
+  { name: '808',    color: '#f77f00' },
+  { name: 'Sample', color: '#06d6a0' },
+];
+
+const BOOM_BAP_PRESET = [
+  [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0], // Kick
+  [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0], // Snare
+  [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0], // HH
+  [0,0,0,0, 0,0,0,1, 0,0,0,0, 0,0,0,0], // Clap
+  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0], // 808
+  [0,0,0,0, 0,1,0,0, 0,0,0,0, 0,1,0,0], // Sample
+];
+
+const SYNCO_PRESET = [
+  [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,0,0], // Kick synco
+  [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1], // Snare
+  [1,1,0,1, 1,0,1,1, 1,1,0,1, 1,0,1,1], // HH dense
+  [0,0,1,0, 0,0,0,1, 0,0,1,0, 0,0,0,0], // Clap
+  [1,0,0,0, 0,0,1,0, 0,0,0,1, 0,0,0,0], // 808
+  [0,1,0,0, 0,1,0,0, 0,1,0,0, 0,0,1,0], // Sample
+];
+
+// ── "That Dress" — Verse 2 (RyanrealAF / Mildew Money Rust)
+// Stanza 1: Bouncy | Stanza 2: Playful-to-hungry | Stanza 3: Hungry, locked in
+// Rhyme scheme: AABB couplets throughout with dense internal chains
+// A=way/day, B=grin/then, C=slid/did, D=neck/check
+// E=rough/enough, F=cans/damn, G=bend/again, H=stressed/confess
+// I=wreck/stretch, J=you/smooth, K=loud/foul, L=left/flexed
+
+const LYRICS_DATA = [
+  // ── STANZA 1 ──────────────────────────────────────────────
+  {
+    label: 'Verse 2 — Bar 1 [Bouncy]',
+    line: [
+      { syl:'Then',   rhyme:'',  accent:false, beat:true  },
+      { syl:'the',    rhyme:'',  accent:false, beat:false },
+      { syl:'scene',  rhyme:'',  accent:true,  beat:false },
+      { syl:'switched', rhyme:'', accent:true, beat:true  },
+      { syl:'gears',  rhyme:'',  accent:false, beat:false },
+      { syl:'in',     rhyme:'',  accent:false, beat:true  },
+      { syl:'a',      rhyme:'',  accent:false, beat:false },
+      { syl:'wild',   rhyme:'',  accent:true,  beat:false },
+      { syl:'ass',    rhyme:'',  accent:false, beat:true  },
+      { syl:'way',    rhyme:'a', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 2',
+    line: [
+      { syl:'You',    rhyme:'',  accent:false, beat:true  },
+      { syl:'dipped', rhyme:'',  accent:true,  beat:false },
+      { syl:'in',     rhyme:'',  accent:false, beat:false },
+      { syl:'some',   rhyme:'',  accent:false, beat:true  },
+      { syl:'stran',  rhyme:'',  accent:false, beat:false },
+      { syl:'ger\'s', rhyme:'',  accent:false, beat:false },
+      { syl:'pool',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'like',   rhyme:'',  accent:false, beat:false },
+      { syl:'you',    rhyme:'',  accent:false, beat:true  },
+      { syl:'owned',  rhyme:'',  accent:true,  beat:false },
+      { syl:'that',   rhyme:'',  accent:false, beat:false },
+      { syl:'day',    rhyme:'a', accent:true,  beat:true  },
+    ]
+  },
+  {
+    label: 'Bar 3',
+    line: [
+      { syl:'Came',   rhyme:'',  accent:false, beat:true  },
+      { syl:'back',   rhyme:'',  accent:true,  beat:false },
+      { syl:'in',     rhyme:'',  accent:false, beat:false },
+      { syl:'that',   rhyme:'',  accent:false, beat:true  },
+      { syl:'black',  rhyme:'',  accent:true,  beat:false },
+      { syl:'dress',  rhyme:'',  accent:true,  beat:true  },
+      { syl:'wet',    rhyme:'',  accent:true,  beat:false },
+      { syl:'skin',   rhyme:'',  accent:true,  beat:false },
+      { syl:'cold',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'grin',   rhyme:'b', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 4',
+    line: [
+      { syl:'And',    rhyme:'',  accent:false, beat:true  },
+      { syl:'I',      rhyme:'',  accent:false, beat:false },
+      { syl:'swear',  rhyme:'',  accent:true,  beat:false },
+      { syl:'that',   rhyme:'',  accent:false, beat:true  },
+      { syl:'whole',  rhyme:'',  accent:true,  beat:false },
+      { syl:'night',  rhyme:'',  accent:true,  beat:false },
+      { syl:'got',    rhyme:'',  accent:false, beat:true  },
+      { syl:'dan',    rhyme:'',  accent:false, beat:false },
+      { syl:'ger',    rhyme:'',  accent:false, beat:false },
+      { syl:'ous',    rhyme:'',  accent:false, beat:true  },
+      { syl:'then',   rhyme:'b', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 5',
+    line: [
+      { syl:'Black',  rhyme:'',  accent:true,  beat:true  },
+      { syl:'cloth',  rhyme:'',  accent:true,  beat:false },
+      { syl:'hugged', rhyme:'',  accent:true,  beat:false },
+      { syl:'tight',  rhyme:'',  accent:true,  beat:true  },
+      { syl:'where',  rhyme:'',  accent:false, beat:false },
+      { syl:'the',    rhyme:'',  accent:false, beat:true  },
+      { syl:'moon',   rhyme:'',  accent:true,  beat:false },
+      { syl:'light',  rhyme:'',  accent:true,  beat:false },
+      { syl:'slid',   rhyme:'c', accent:true,  beat:true  },
+    ]
+  },
+  {
+    label: 'Bar 6',
+    line: [
+      { syl:'Had',    rhyme:'',  accent:false, beat:true  },
+      { syl:'a',      rhyme:'',  accent:false, beat:false },
+      { syl:'slit',   rhyme:'',  accent:true,  beat:false },
+      { syl:'on',     rhyme:'',  accent:false, beat:true  },
+      { syl:'the',    rhyme:'',  accent:false, beat:false },
+      { syl:'side',   rhyme:'',  accent:true,  beat:false },
+      { syl:'do',     rhyme:'',  accent:false, beat:true  },
+      { syl:'ing',    rhyme:'',  accent:false, beat:false },
+      { syl:'what',   rhyme:'',  accent:false, beat:false },
+      { syl:'it',     rhyme:'',  accent:false, beat:true  },
+      { syl:'did',    rhyme:'c', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 7',
+    line: [
+      { syl:'Hair',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'still',  rhyme:'',  accent:true,  beat:false },
+      { syl:'damp',   rhyme:'',  accent:true,  beat:false },
+      { syl:'lit',    rhyme:'',  accent:false, beat:true  },
+      { syl:'tle',    rhyme:'',  accent:false, beat:false },
+      { syl:'drops',  rhyme:'',  accent:true,  beat:false },
+      { syl:'on',     rhyme:'',  accent:false, beat:true  },
+      { syl:'your',   rhyme:'',  accent:false, beat:false },
+      { syl:'neck',   rhyme:'d', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 8',
+    line: [
+      { syl:'Had',    rhyme:'',  accent:false, beat:true  },
+      { syl:'me',     rhyme:'',  accent:false, beat:false },
+      { syl:'try',    rhyme:'',  accent:false, beat:true  },
+      { syl:'ing',    rhyme:'',  accent:false, beat:false },
+      { syl:'real',   rhyme:'',  accent:true,  beat:false },
+      { syl:'hard',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'to',     rhyme:'',  accent:false, beat:false },
+      { syl:'keep',   rhyme:'',  accent:true,  beat:false },
+      { syl:'my',     rhyme:'',  accent:false, beat:true  },
+      { syl:'shit',   rhyme:'',  accent:true,  beat:false },
+      { syl:'in',     rhyme:'',  accent:false, beat:false },
+      { syl:'check',  rhyme:'d', accent:true,  beat:true  },
+    ]
+  },
+  // ── STANZA 2 ──────────────────────────────────────────────
+  {
+    label: 'Bar 9 [Playful → Hungry]',
+    line: [
+      { syl:'Fast',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'for',    rhyme:'',  accent:false, beat:false },
+      { syl:'ward',   rhyme:'',  accent:false, beat:false },
+      { syl:'lat',    rhyme:'',  accent:false, beat:true  },
+      { syl:'er',     rhyme:'',  accent:false, beat:false },
+      { syl:'now',    rhyme:'',  accent:true,  beat:false },
+      { syl:'the',    rhyme:'',  accent:false, beat:true  },
+      { syl:'block',  rhyme:'',  accent:true,  beat:false },
+      { syl:'look',   rhyme:'',  accent:true,  beat:false },
+      { syl:'rough',  rhyme:'e', accent:true,  beat:true  },
+    ]
+  },
+  {
+    label: 'Bar 10',
+    line: [
+      { syl:'I',      rhyme:'',  accent:false, beat:true  },
+      { syl:'glance', rhyme:'',  accent:true,  beat:false },
+      { syl:'your',   rhyme:'',  accent:false, beat:false },
+      { syl:'way',    rhyme:'',  accent:true,  beat:true  },
+      { syl:'and',    rhyme:'',  accent:false, beat:false },
+      { syl:'girl',   rhyme:'',  accent:true,  beat:false },
+      { syl:'man',    rhyme:'',  accent:true,  beat:true  },
+      { syl:'that',   rhyme:'',  accent:false, beat:false },
+      { syl:'was',    rhyme:'',  accent:false, beat:false },
+      { syl:'e',      rhyme:'',  accent:false, beat:true  },
+      { syl:'nough',  rhyme:'e', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 11',
+    line: [
+      { syl:'You',    rhyme:'',  accent:false, beat:true  },
+      { syl:'up',     rhyme:'',  accent:true,  beat:false },
+      { syl:'side',   rhyme:'',  accent:true,  beat:false },
+      { syl:'down',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'in',     rhyme:'',  accent:false, beat:false },
+      { syl:'a',      rhyme:'',  accent:false, beat:true  },
+      { syl:'dump',   rhyme:'',  accent:true,  beat:false },
+      { syl:'ster',   rhyme:'',  accent:false, beat:false },
+      { syl:'hunt',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'ing',    rhyme:'',  accent:false, beat:false },
+      { syl:'for',    rhyme:'',  accent:false, beat:false },
+      { syl:'cans',   rhyme:'f', accent:true,  beat:true  },
+    ]
+  },
+  {
+    label: 'Bar 12',
+    line: [
+      { syl:'Black',  rhyme:'',  accent:true,  beat:true  },
+      { syl:'dress',  rhyme:'',  accent:true,  beat:false },
+      { syl:'rid',    rhyme:'',  accent:false, beat:false },
+      { syl:'ing',    rhyme:'',  accent:false, beat:true  },
+      { syl:'high',   rhyme:'',  accent:true,  beat:false },
+      { syl:'er',     rhyme:'',  accent:false, beat:false },
+      { syl:'like',   rhyme:'',  accent:false, beat:true  },
+      { syl:'it',     rhyme:'',  accent:false, beat:false },
+      { syl:'ain\'t', rhyme:'',  accent:true,  beat:false },
+      { syl:'give',   rhyme:'',  accent:false, beat:true  },
+      { syl:'a',      rhyme:'',  accent:false, beat:false },
+      { syl:'damn',   rhyme:'f', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 13',
+    line: [
+      { syl:'That',   rhyme:'',  accent:false, beat:true  },
+      { syl:'slit',   rhyme:'',  accent:true,  beat:false },
+      { syl:'fell',   rhyme:'',  accent:true,  beat:false },
+      { syl:'o',      rhyme:'',  accent:false, beat:true  },
+      { syl:'pen',    rhyme:'',  accent:false, beat:false },
+      { syl:'showed', rhyme:'',  accent:true,  beat:false },
+      { syl:'more',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'with',   rhyme:'',  accent:false, beat:false },
+      { syl:'the',    rhyme:'',  accent:false, beat:false },
+      { syl:'bend',   rhyme:'g', accent:true,  beat:true  },
+    ]
+  },
+  {
+    label: 'Bar 14',
+    line: [
+      { syl:'Lord',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'that',   rhyme:'',  accent:false, beat:false },
+      { syl:'pic',    rhyme:'',  accent:false, beat:false },
+      { syl:'ture',   rhyme:'',  accent:false, beat:true  },
+      { syl:'still',  rhyme:'',  accent:true,  beat:false },
+      { syl:'loop',   rhyme:'',  accent:true,  beat:false },
+      { syl:'when',   rhyme:'',  accent:false, beat:true  },
+      { syl:'I',      rhyme:'',  accent:false, beat:false },
+      { syl:'think',  rhyme:'',  accent:true,  beat:false },
+      { syl:'on',     rhyme:'',  accent:false, beat:true  },
+      { syl:'it',     rhyme:'',  accent:false, beat:false },
+      { syl:'a',      rhyme:'',  accent:false, beat:false },
+      { syl:'gain',   rhyme:'g', accent:true,  beat:true  },
+    ]
+  },
+  {
+    label: 'Bar 15',
+    line: [
+      { syl:'Fine',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'as',     rhyme:'',  accent:false, beat:false },
+      { syl:'hell',   rhyme:'',  accent:true,  beat:false },
+      { syl:'in',     rhyme:'',  accent:false, beat:true  },
+      { syl:'the',    rhyme:'',  accent:false, beat:false },
+      { syl:'cha',    rhyme:'',  accent:false, beat:false },
+      { syl:'os',     rhyme:'',  accent:true,  beat:true  },
+      { syl:'sex',    rhyme:'',  accent:true,  beat:false },
+      { syl:'y',      rhyme:'',  accent:false, beat:false },
+      { syl:'and',    rhyme:'',  accent:false, beat:true  },
+      { syl:'stressed', rhyme:'h', accent:true, beat:false },
+    ]
+  },
+  {
+    label: 'Bar 16',
+    line: [
+      { syl:'Dump',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'ster',   rhyme:'',  accent:false, beat:false },
+      { syl:'div',    rhyme:'',  accent:true,  beat:false },
+      { syl:'ing',    rhyme:'',  accent:false, beat:true  },
+      { syl:'in',     rhyme:'',  accent:false, beat:false },
+      { syl:'that',   rhyme:'',  accent:false, beat:false },
+      { syl:'dress',  rhyme:'',  accent:true,  beat:true  },
+      { syl:'shit',   rhyme:'',  accent:true,  beat:false },
+      { syl:'this',   rhyme:'',  accent:false, beat:true  },
+      { syl:'I',      rhyme:'',  accent:false, beat:false },
+      { syl:'con',    rhyme:'',  accent:false, beat:false },
+      { syl:'fess',   rhyme:'h', accent:true,  beat:true  },
+    ]
+  },
+  // ── STANZA 3 ──────────────────────────────────────────────
+  {
+    label: 'Bar 17 [Hungry, locked in]',
+    line: [
+      { syl:'From',   rhyme:'',  accent:false, beat:true  },
+      { syl:'the',    rhyme:'',  accent:false, beat:false },
+      { syl:'out',    rhyme:'',  accent:true,  beat:false },
+      { syl:'side',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'we',     rhyme:'',  accent:false, beat:false },
+      { syl:'looked', rhyme:'',  accent:true,  beat:false },
+      { syl:'like',   rhyme:'',  accent:false, beat:true  },
+      { syl:'a',      rhyme:'',  accent:false, beat:false },
+      { syl:'low',    rhyme:'',  accent:true,  beat:false },
+      { syl:'bud',    rhyme:'',  accent:false, beat:true  },
+      { syl:'get',    rhyme:'',  accent:false, beat:false },
+      { syl:'wreck',  rhyme:'i', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 18',
+    line: [
+      { syl:'Two',    rhyme:'',  accent:true,  beat:true  },
+      { syl:'tired',  rhyme:'',  accent:true,  beat:false },
+      { syl:'mo',     rhyme:'',  accent:false, beat:true  },
+      { syl:'ther',   rhyme:'',  accent:false, beat:false },
+      { syl:'fuck',   rhyme:'',  accent:true,  beat:false },
+      { syl:'ers',    rhyme:'',  accent:false, beat:true  },
+      { syl:'with',   rhyme:'',  accent:false, beat:false },
+      { syl:'a',      rhyme:'',  accent:false, beat:false },
+      { syl:'trunk',  rhyme:'',  accent:true,  beat:true  },
+      { syl:'on',     rhyme:'',  accent:false, beat:false },
+      { syl:'stretch', rhyme:'i', accent:true, beat:false },
+    ]
+  },
+  {
+    label: 'Bar 19',
+    line: [
+      { syl:'But',    rhyme:'',  accent:false, beat:true  },
+      { syl:'I',      rhyme:'',  accent:false, beat:false },
+      { syl:'was',    rhyme:'',  accent:false, beat:false },
+      { syl:'n\'t',   rhyme:'',  accent:false, beat:true  },
+      { syl:'mad',    rhyme:'',  accent:true,  beat:false },
+      { syl:'nah',    rhyme:'',  accent:true,  beat:false },
+      { syl:'I',      rhyme:'',  accent:false, beat:true  },
+      { syl:'was',    rhyme:'',  accent:false, beat:false },
+      { syl:'locked', rhyme:'',  accent:true,  beat:false },
+      { syl:'on',     rhyme:'',  accent:false, beat:true  },
+      { syl:'you',    rhyme:'j', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 20',
+    line: [
+      { syl:'How',    rhyme:'',  accent:true,  beat:true  },
+      { syl:'you',    rhyme:'',  accent:false, beat:false },
+      { syl:'made',   rhyme:'',  accent:true,  beat:false },
+      { syl:'broke',  rhyme:'',  accent:true,  beat:true  },
+      { syl:'look',   rhyme:'',  accent:true,  beat:false },
+      { syl:'bad',    rhyme:'',  accent:true,  beat:false },
+      { syl:'and',    rhyme:'',  accent:false, beat:true  },
+      { syl:'made',   rhyme:'',  accent:true,  beat:false },
+      { syl:'strug',  rhyme:'',  accent:false, beat:false },
+      { syl:'gle',    rhyme:'',  accent:false, beat:true  },
+      { syl:'look',   rhyme:'',  accent:true,  beat:false },
+      { syl:'smooth', rhyme:'j', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 21',
+    line: [
+      { syl:'Yeah',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'the',    rhyme:'',  accent:false, beat:false },
+      { syl:'night',  rhyme:'',  accent:true,  beat:false },
+      { syl:'stayed', rhyme:'',  accent:true,  beat:true  },
+      { syl:'weird',  rhyme:'',  accent:true,  beat:false },
+      { syl:'but',    rhyme:'',  accent:false, beat:true  },
+      { syl:'the',    rhyme:'',  accent:false, beat:false },
+      { syl:'want',   rhyme:'',  accent:true,  beat:false },
+      { syl:'got',    rhyme:'',  accent:false, beat:true  },
+      { syl:'loud',   rhyme:'k', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 22',
+    line: [
+      { syl:'Me',     rhyme:'',  accent:true,  beat:true  },
+      { syl:'try',    rhyme:'',  accent:false, beat:false },
+      { syl:'ing',    rhyme:'',  accent:false, beat:false },
+      { syl:'play',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'it',     rhyme:'',  accent:false, beat:false },
+      { syl:'cool',   rhyme:'',  accent:true,  beat:false },
+      { syl:'while',  rhyme:'',  accent:false, beat:true  },
+      { syl:'my',     rhyme:'',  accent:false, beat:false },
+      { syl:'thoughts', rhyme:'', accent:true, beat:false },
+      { syl:'got',    rhyme:'',  accent:false, beat:true  },
+      { syl:'foul',   rhyme:'k', accent:true,  beat:false },
+    ]
+  },
+  {
+    label: 'Bar 23',
+    line: [
+      { syl:'Still',  rhyme:'',  accent:true,  beat:true  },
+      { syl:'I',      rhyme:'',  accent:false, beat:false },
+      { syl:'grabbed', rhyme:'', accent:true,  beat:false },
+      { syl:'that',   rhyme:'',  accent:false, beat:true  },
+      { syl:'bag',    rhyme:'',  accent:true,  beat:false },
+      { syl:'helped', rhyme:'',  accent:true,  beat:false },
+      { syl:'load',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'what',   rhyme:'',  accent:false, beat:false },
+      { syl:'was',    rhyme:'',  accent:false, beat:false },
+      { syl:'left',   rhyme:'l', accent:true,  beat:true  },
+    ]
+  },
+  {
+    label: 'Bar 24 [Close out]',
+    line: [
+      { syl:'Horn',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'y',      rhyme:'',  accent:false, beat:false },
+      { syl:'as',     rhyme:'',  accent:false, beat:false },
+      { syl:'hell',   rhyme:'',  accent:true,  beat:true  },
+      { syl:'hands',  rhyme:'',  accent:true,  beat:false },
+      { syl:'use',    rhyme:'',  accent:true,  beat:false },
+      { syl:'ful',    rhyme:'',  accent:false, beat:true  },
+      { syl:'that\'s', rhyme:'', accent:false, beat:false },
+      { syl:'dis',    rhyme:'',  accent:false, beat:false },
+      { syl:'ci',     rhyme:'',  accent:false, beat:true  },
+      { syl:'pline',  rhyme:'',  accent:true,  beat:false },
+      { syl:'flexed', rhyme:'l', accent:true,  beat:true  },
+    ]
+  }
+];
+
+// Syllable counts per bar — "That Dress" V2 is dense, peaks mid-verse
+// Stanza 1: 10, 12, 10, 11, 9, 11, 9, 12
+// Stanza 2: 10, 11, 12, 12, 10, 13, 11, 12
+// Stanza 3: 12, 11, 11, 12, 10, 11, 10, 12
+// Showing first 8 bars (stanza 1) in density view
+const DENSITY_DATA = [10, 12, 10, 11, 9, 11, 9, 12];
+
+const THEORY_CARDS = [
+  {
+    concept: 'Scale',
+    ui: 'Fretboard / Keyboard',
+    desc: 'A sequence of notes separated by specific intervals. The major scale uses W-W-H-W-W-W-H.',
+    rap: '"Scale is the ladder — start at the root, every rung is an interval, the octave is the ceiling."'
+  },
+  {
+    concept: 'Chord',
+    ui: 'Chord Grid / Pads',
+    desc: 'Three or more notes played simultaneously. Triads stack thirds: root, third, fifth.',
+    rap: '"A chord is a squad — the root holds it down, the fifth rides, the third carries the vibe."'
+  },
+  {
+    concept: 'Rhythm',
+    ui: 'Step Sequencer',
+    desc: 'The arrangement of sounds in time. Defined by note values, meter, and subdivision.',
+    rap: '"Rhythm is what you feel in your chest before your brain processes the beat."'
+  },
+  {
+    concept: 'Meter',
+    ui: 'Animated Notation',
+    desc: 'The recurring pattern of strong and weak beats. 4/4 = four quarter notes per bar.',
+    rap: '"4/4 is the law. Break it intentionally or it breaks you accidentally."'
+  },
+  {
+    concept: 'Interval',
+    ui: 'Visual Distance Map',
+    desc: 'The distance between two notes. Minor 2nd = 1 semitone. Octave = 12 semitones.',
+    rap: '"Interval is the space between bars in a cypher — too close, you clash; too far, you drift."'
+  },
+  {
+    concept: 'Harmony',
+    ui: 'Chord Progression',
+    desc: 'Multiple notes sounding together to create tension or resolution. Governed by voice leading.',
+    rap: '"Harmony is two MCs who finish each other\'s bars without stepping on the flow."'
+  },
+  {
+    concept: 'Syncopation',
+    ui: 'Off-Beat Grid Cells',
+    desc: 'Placing rhythmic emphasis on weak beats or between beats. Creates groove and tension.',
+    rap: '"The snare on 2 and 4 is the law. Hit it on the AND and you just broke the rules right."'
+  },
+  {
+    concept: 'Timbre',
+    ui: 'EQ / Spectral Display',
+    desc: 'The tonal quality or "color" of a sound. What makes a piano different from a guitar on the same note.',
+    rap: '"Timbre is why Rakim\'s voice cuts different. Same pitch, whole different frequency."'
+  },
+];
+
+const KEYS = ['C','G','D','A','E','B','F#','Db','Ab','Eb','Bb','F'];
+const MAJOR_CHORDS = {
+  'C':  ['C','Dm','Em','F','G','Am','Bdim'],
+  'G':  ['G','Am','Bm','C','D','Em','F#dim'],
+  'D':  ['D','Em','F#m','G','A','Bm','C#dim'],
+  'A':  ['A','Bm','C#m','D','E','F#m','G#dim'],
+  'E':  ['E','F#m','G#m','A','B','C#m','D#dim'],
+  'B':  ['B','C#m','D#m','E','F#','G#m','A#dim'],
+  'F#': ['F#','G#m','A#m','B','C#','D#m','E#dim'],
+  'Db': ['Db','Ebm','Fm','Gb','Ab','Bbm','Cdim'],
+  'Ab': ['Ab','Bbm','Cm','Db','Eb','Fm','Gdim'],
+  'Eb': ['Eb','Fm','Gm','Ab','Bb','Cm','Ddim'],
+  'Bb': ['Bb','Cm','Dm','Eb','F','Gm','Adim'],
+  'F':  ['F','Gm','Am','Bb','C','Dm','Edim'],
+};
+
+const MAJOR_STEPS = ['W','W','H','W','W','W','H'];
+
+// ==================== STATE ====================
+let gridState = INSTRUMENTS.map(() => new Array(16).fill(0));
+let isPlaying = false;
+let currentStep = 0;
+let bpm = 90;
+let swingAmount = 0;
+let intervalId = null;
+let animFrameId = null;
+let selectedKey = 0;
+let animateLyrics = false;
+let lyricAnimTimer = null;
+let lyricIdx = 0;
+let sylIdx = 0;
+
+// ==================== AUDIO ====================
+let ctx = null;
+function getAudioContext() {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  return ctx;
+}
+
+function playDrum(type, when) {
+  const ac = getAudioContext();
+  const gainNode = ac.createGain();
+  gainNode.connect(ac.destination);
+
+  if (type === 0) { // Kick
+    const osc = ac.createOscillator();
+    osc.connect(gainNode);
+    osc.frequency.setValueAtTime(150, when);
+    osc.frequency.exponentialRampToValueAtTime(0.01, when + 0.5);
+    gainNode.gain.setValueAtTime(1, when);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, when + 0.5);
+    osc.start(when); osc.stop(when + 0.5);
+  } else if (type === 1) { // Snare
+    const buf = ac.createBuffer(1, ac.sampleRate * 0.2, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+    src.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.8, when);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, when + 0.2);
+    src.start(when); src.stop(when + 0.2);
+  } else if (type === 2) { // HH
+    const buf = ac.createBuffer(1, ac.sampleRate * 0.05, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+    const filter = ac.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 7000;
+    src.connect(filter);
+    filter.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.4, when);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, when + 0.05);
+    src.start(when); src.stop(when + 0.05);
+  } else if (type === 3) { // Clap
+    const buf = ac.createBuffer(1, ac.sampleRate * 0.15, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 1.5) * 0.9;
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+    src.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.7, when);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, when + 0.15);
+    src.start(when); src.stop(when + 0.15);
+  } else if (type === 4) { // 808
+    const osc = ac.createOscillator();
+    osc.connect(gainNode);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(60, when);
+    osc.frequency.exponentialRampToValueAtTime(40, when + 0.8);
+    gainNode.gain.setValueAtTime(0.9, when);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, when + 0.8);
+    osc.start(when); osc.stop(when + 0.8);
+  } else { // Sample (chord stab)
+    const ac2 = getAudioContext();
+    const osc1 = ac2.createOscillator();
+    const osc2 = ac2.createOscillator();
+    const g = ac2.createGain();
+    osc1.connect(g); osc2.connect(g); g.connect(ac2.destination);
+    osc1.frequency.value = 261.63; osc2.frequency.value = 329.63;
+    g.gain.setValueAtTime(0.3, when);
+    g.gain.exponentialRampToValueAtTime(0.001, when + 0.3);
+    osc1.start(when); osc2.start(when);
+    osc1.stop(when + 0.3); osc2.stop(when + 0.3);
+  }
+}
+
+// ==================== SEQUENCER BUILD ====================
+function buildSequencer() {
+  const grid = document.getElementById('seqGrid');
+  const nums = document.getElementById('stepNumbers');
+  grid.innerHTML = '';
+  nums.innerHTML = '';
+
+  for (let s = 0; s < 16; s++) {
+    const span = document.createElement('span');
+    span.className = 'step-num' + (s % 4 === 0 ? ' beat-marker' : '');
+    span.textContent = s % 4 === 0 ? (s / 4 + 1) : '·';
+    nums.appendChild(span);
+  }
+
+  INSTRUMENTS.forEach((inst, r) => {
+    const row = document.createElement('div');
+    row.className = 'seq-row';
+
+    const lbl = document.createElement('span');
+    lbl.className = 'seq-row-label';
+    lbl.textContent = inst.name;
+    row.appendChild(lbl);
+
+    for (let s = 0; s < 16; s++) {
+      const cell = document.createElement('div');
+      cell.className = 'seq-cell' + (s % 4 === 0 ? ' beat-4' : '');
+      cell.dataset.row = r;
+      cell.dataset.step = s;
+      if (gridState[r][s]) { cell.classList.add('on'); cell.style.background = inst.color; }
+      cell.addEventListener('click', () => {
+        gridState[r][s] = 1 - gridState[r][s];
+        if (gridState[r][s]) { cell.classList.add('on'); cell.style.background = inst.color; }
+        else { cell.classList.remove('on'); cell.style.background = ''; }
+      });
+      row.appendChild(cell);
+    }
+    grid.appendChild(row);
+  });
+}
+
+function updatePlayingCells(step) {
+  document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('playing'));
+  document.querySelectorAll(`.seq-cell[data-step="${step}"]`).forEach(c => {
+    c.classList.add('playing');
+    setTimeout(() => c.classList.remove('playing'), 80);
+  });
+}
+
+function stepSequencer() {
+  const ac = getAudioContext();
+  const stepDuration = 60 / bpm / 4;
+  const swingOffset = (currentStep % 2 === 1) ? (swingAmount / 100) * stepDuration * 0.5 : 0;
+  const when = ac.currentTime + swingOffset;
+
+  INSTRUMENTS.forEach((_, r) => {
+    if (gridState[r][currentStep]) playDrum(r, when);
+  });
+
+  updatePlayingCells(currentStep);
+  currentStep = (currentStep + 1) % 16;
+}
+
+function startSequencer() {
+  if (isPlaying) return;
+  isPlaying = true;
+  currentStep = 0;
+  const stepMs = (60 / bpm / 4) * 1000;
+  intervalId = setInterval(stepSequencer, stepMs);
+  document.getElementById('playBtn').textContent = '■ Stop';
+  document.getElementById('playDot').classList.remove('stopped');
+  document.getElementById('playStatus').textContent = 'Playing';
+}
+
+function stopSequencer() {
+  isPlaying = false;
+  clearInterval(intervalId);
+  intervalId = null;
+  document.querySelectorAll('.seq-cell').forEach(c => c.classList.remove('playing'));
+  document.getElementById('playBtn').textContent = '▶ Play';
+  document.getElementById('playDot').classList.add('stopped');
+  document.getElementById('playStatus').textContent = 'Stopped';
+  currentStep = 0;
+}
+
+function restartIfPlaying() {
+  if (isPlaying) {
+    clearInterval(intervalId);
+    const stepMs = (60 / bpm / 4) * 1000;
+    intervalId = setInterval(stepSequencer, stepMs);
+  }
+}
+
+function loadPreset(preset) {
+  stopSequencer();
+  gridState = preset.map(r => [...r]);
+  buildSequencer();
+}
+
+// ==================== LYRIC GRID ====================
+function buildLyricGrid() {
+  const container = document.getElementById('lyricDisplay');
+  container.innerHTML = '';
+
+  LYRICS_DATA.forEach((verse, vi) => {
+    const block = document.createElement('div');
+    block.className = 'lyric-verse';
+
+    const vlbl = document.createElement('div');
+    vlbl.className = 'verse-label';
+    vlbl.textContent = verse.label;
+    block.appendChild(vlbl);
+
+    const line = document.createElement('div');
+    line.className = 'lyric-line';
+
+    verse.line.forEach((s, si) => {
+      const span = document.createElement('span');
+      span.className = 'syllable';
+      if (s.rhyme) span.classList.add('rhyme-' + s.rhyme);
+      if (s.accent) span.classList.add('accent');
+      if (s.beat) span.classList.add('beat');
+      span.textContent = s.syl;
+      span.dataset.verse = vi;
+      span.dataset.syl = si;
+      span.title = `${s.rhyme ? 'Rhyme ' + s.rhyme.toUpperCase() : 'No rhyme'} · ${s.beat ? 'On beat' : 'Off beat'} · ${s.accent ? 'Accented' : ''}`;
+      line.appendChild(span);
+    });
+
+    block.appendChild(line);
+    container.appendChild(block);
+  });
+
+  buildDensityBars();
+}
+
+function buildDensityBars() {
+  const container = document.getElementById('densityBars');
+  container.innerHTML = '';
+  const sideContainer = document.getElementById('sidebarDensity');
+  sideContainer.innerHTML = '';
+
+  DENSITY_DATA.forEach((d, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '10px';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'density-label';
+    lbl.innerHTML = `<span>Bar ${i + 1}</span><span>${d} syllables</span>`;
+
+    const outer = document.createElement('div');
+    outer.className = 'density-bar-outer';
+    const inner = document.createElement('div');
+    inner.className = 'density-bar-inner';
+    inner.style.width = (d / 14 * 100) + '%';
+
+    outer.appendChild(inner);
+    wrap.appendChild(lbl);
+    wrap.appendChild(outer);
+    container.appendChild(wrap);
+
+    // sidebar clone
+    const sw = wrap.cloneNode(true);
+    sideContainer.appendChild(sw);
+  });
+}
+
+let allSyllables = [];
+function getAllSyllables() {
+  allSyllables = Array.from(document.querySelectorAll('.syllable'));
+}
+
+function animateLyricFlow() {
+  getAllSyllables();
+  if (!allSyllables.length) return;
+  let i = 0;
+  const bpmFlow = parseInt(document.getElementById('flowSlider').value);
+  const msPerSyl = Math.round(60000 / bpmFlow / 2);
+
+  function flashNext() {
+    if (!animateLyrics) return;
+    if (i > 0) allSyllables[i - 1]?.classList.remove('lit');
+    if (i >= allSyllables.length) i = 0;
+    allSyllables[i].classList.add('lit');
+    i++;
+    lyricAnimTimer = setTimeout(flashNext, msPerSyl);
+  }
+  flashNext();
+}
+
+// ==================== THEORY CARDS ====================
+function buildTheoryGrid() {
+  const grid = document.getElementById('theoryGrid');
+  grid.innerHTML = '';
+
+  THEORY_CARDS.forEach(card => {
+    const el = document.createElement('div');
+    el.className = 'theory-card';
+
+    el.innerHTML = `
+      <div class="card-concept">${card.concept}</div>
+      <div class="card-ui">↗ ${card.ui}</div>
+      <div class="card-desc">${card.desc}</div>
+      <div class="card-rap">${card.rap}</div>
+    `;
+
+    grid.appendChild(el);
+  });
+}
+
+// ==================== PRODUCTION PANELS ====================
+const EQ_FREQS = ['60','120','250','500','1k','2k','4k','8k','16k'];
+const EQ_DEFAULTS = [60,40,50,50,50,60,55,45,35];
+let eqVals = [...EQ_DEFAULTS];
+
+function buildEQ() {
+  const container = document.getElementById('eqBars');
+  container.innerHTML = '';
+  EQ_FREQS.forEach((f, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'eq-bar-wrap';
+
+    const bar = document.createElement('div');
+    bar.className = 'eq-bar';
+    bar.style.height = eqVals[i] + '%';
+    bar.style.background = `hsl(${40 + i * 12}, 90%, 55%)`;
+
+    let dragging = false;
+    bar.addEventListener('mousedown', () => dragging = true);
+    document.addEventListener('mouseup', () => dragging = false);
+    bar.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const rect = bar.parentElement.getBoundingClientRect();
+      const pct = Math.max(5, Math.min(100, 100 - ((e.clientY - rect.top) / rect.height * 100)));
+      eqVals[i] = pct;
+      bar.style.height = pct + '%';
+    });
+
+    const lbl = document.createElement('div');
+    lbl.className = 'eq-freq';
+    lbl.textContent = f;
+
+    wrap.appendChild(bar);
+    wrap.appendChild(lbl);
+    container.appendChild(wrap);
+  });
+}
+
+window.presetEQ = function(type) {
+  if (type === 'flat') eqVals = EQ_FREQS.map(() => 50);
+  else if (type === 'bass') eqVals = [90,80,65,50,45,50,45,40,30];
+  else if (type === 'vocal') eqVals = [30,35,45,55,75,85,70,55,40];
+
+  document.querySelectorAll('.eq-bar').forEach((bar, i) => {
+    bar.style.height = eqVals[i] + '%';
+  });
+};
+
+function buildSwingViz(swing) {
+  const container = document.getElementById('swingViz');
+  container.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const tick = document.createElement('div');
+    tick.className = 'swing-tick';
+    const isOn = i % 2 === 0;
+    const isSwung = i % 2 === 1 && swing > 20;
+    tick.classList.toggle('on', isOn);
+    tick.classList.toggle('swung', isSwung);
+    const baseH = isOn ? 40 : 20;
+    const swungH = isSwung ? 20 + swing * 0.15 : baseH;
+    tick.style.height = swungH + 'px';
+    if (isSwung) tick.style.marginLeft = (swing * 0.02) + 'px';
+    container.appendChild(tick);
+  }
+}
+
+function buildSampleLayers() {
+  const container = document.getElementById('sampleLayers');
+  const layers = [
+    { name: 'Bass Loop', freq: '60–250Hz', active: true, color: '#f0b429' },
+    { name: 'Chord Stab', freq: '250–3kHz', active: true, color: '#9b5de5' },
+    { name: 'Drum Break', freq: '100Hz–12kHz', active: true, color: '#e63946' },
+    { name: 'Vocal Chop', freq: '300Hz–5kHz', active: false, color: '#00f5d4' },
+  ];
+
+  layers.forEach(layer => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--deep); border:1px solid var(--border); cursor:pointer;';
+
+    const dot = document.createElement('div');
+    dot.style.cssText = `width:10px;height:10px;flex-shrink:0;background:${layer.active ? layer.color : 'var(--border)'};transition:background 0.15s;`;
+
+    const info = document.createElement('div');
+    info.style.flex = '1';
+    info.innerHTML = `<div style="font-size:0.68rem;color:var(--white)">${layer.name}</div><div style="font-size:0.55rem;color:var(--muted)">${layer.freq}</div>`;
+
+    let active = layer.active;
+    row.addEventListener('click', () => {
+      active = !active;
+      dot.style.background = active ? layer.color : 'var(--border)';
+    });
+
+    row.appendChild(dot);
+    row.appendChild(info);
+    container.appendChild(row);
+  });
+}
+
+window.setWave = function(type) {
+  const container = document.getElementById('waveformViz');
+  container.innerHTML = '';
+  const profiles = {
+    kick: (i, n) => i < n * 0.05 ? 0.9 * Math.sin(Math.PI * i / (n * 0.05)) : 0.9 * Math.pow(1 - (i / n), 3) * Math.sin(i * 0.8),
+    snare: (i, n) => (Math.random() * 2 - 1) * Math.pow(1 - i / n, 1.5) * 0.8,
+    vocal: (i, n) => {
+      const env = i < n * 0.1 ? i / (n * 0.1) : 1 - ((i - n * 0.1) / (n * 0.9));
+      return Math.sin(i * 0.3) * env * 0.7 + (Math.random() * 0.1 - 0.05);
+    }
+  };
+  const fn = profiles[type];
+  const n = 80;
+  for (let i = 0; i < n; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    const val = Math.abs(fn(i, n));
+    bar.style.height = Math.max(2, val * 56) + 'px';
+    const hue = type === 'kick' ? 45 : type === 'snare' ? 0 : 175;
+    bar.style.background = `hsl(${hue}, 90%, 55%)`;
+    container.appendChild(bar);
+  }
+};
+
+// ==================== CIRCLE OF FIFTHS ====================
+function drawCircle(selectedIdx) {
+  const canvas = document.getElementById('circleCanvas');
+  const c = canvas.getContext('2d');
+  const cx = 120, cy = 120, R = 100, r = 60;
+  c.clearRect(0, 0, 240, 240);
+
+  KEYS.forEach((key, i) => {
+    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+    const nextAngle = ((i + 1) / 12) * Math.PI * 2 - Math.PI / 2;
+    const isSelected = i === selectedIdx;
+
+    c.beginPath();
+    c.moveTo(cx, cy);
+    c.arc(cx, cy, R, angle, nextAngle);
+    c.closePath();
+    c.fillStyle = isSelected ? '#f0b429' : (i % 2 === 0 ? '#1a1a1a' : '#141414');
+    c.fill();
+    c.strokeStyle = '#2a2a2a';
+    c.lineWidth = 1;
+    c.stroke();
+
+    const labelAngle = angle + (nextAngle - angle) / 2;
+    const lx = cx + (R + r) / 2 * Math.cos(labelAngle);
+    const ly = cy + (R + r) / 2 * Math.sin(labelAngle);
+    c.fillStyle = isSelected ? '#0a0a0a' : '#aaa';
+    c.font = `${isSelected ? 'bold ' : ''}12px "Space Mono", monospace`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(key, lx, ly);
+  });
+
+  // Center
+  c.beginPath();
+  c.arc(cx, cy, r * 0.58, 0, Math.PI * 2);
+  c.fillStyle = '#0a0a0a';
+  c.fill();
+  c.strokeStyle = '#2a2a2a';
+  c.stroke();
+}
+
+function updateKeyInfo(idx) {
+  const key = KEYS[idx];
+  document.getElementById('keyInfo').textContent = key + ' Major';
+  const chordsContainer = document.getElementById('keyChords');
+  chordsContainer.innerHTML = '';
+  const chords = MAJOR_CHORDS[key] || [];
+  const roles = ['I','ii','iii','IV','V','vi','vii°'];
+  chords.forEach((ch, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'chord-pill';
+    pill.innerHTML = `<span style="font-size:0.5rem;color:var(--muted);display:block">${roles[i]}</span>${ch}`;
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.chord-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      playChordTone(i);
+    });
+    chordsContainer.appendChild(pill);
+  });
+}
+
+function playChordTone(degree) {
+  const ac = getAudioContext();
+  const freqs = [261.63, 293.66, 329.63, 349.23, 392, 440, 493.88];
+  const f = freqs[degree % freqs.length];
+  [f, f * 1.26, f * 1.5].forEach((freq, i) => {
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.connect(g); g.connect(ac.destination);
+    osc.frequency.value = freq;
+    osc.type = 'triangle';
+    g.gain.setValueAtTime(0.15, ac.currentTime + i * 0.05);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 1.2);
+    osc.start(ac.currentTime + i * 0.05);
+    osc.stop(ac.currentTime + 1.2);
+  });
+}
+
+document.getElementById('circleCanvas').addEventListener('click', e => {
+  const rect = e.target.getBoundingClientRect();
+  const x = e.clientX - rect.left - 120;
+  const y = e.clientY - rect.top - 120;
+  const dist = Math.sqrt(x * x + y * y);
+  if (dist < 55 || dist > 110) return;
+  let angle = Math.atan2(y, x) + Math.PI / 2;
+  if (angle < 0) angle += Math.PI * 2;
+  selectedKey = Math.floor(angle / (Math.PI * 2) * 12) % 12;
+  drawCircle(selectedKey);
+  updateKeyInfo(selectedKey);
+  buildIntervalRow(selectedKey);
+});
+
+// ==================== INTERVAL ROW ====================
+function buildIntervalRow(keyIdx) {
+  const row = document.getElementById('intervalRow');
+  row.innerHTML = '';
+  MAJOR_STEPS.forEach((step, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'interval-cell';
+    cell.textContent = step;
+    cell.addEventListener('click', () => {
+      cell.classList.add('lit');
+      setTimeout(() => cell.classList.remove('lit'), 400);
+      playIntervalTone(i, keyIdx);
+    });
+    row.appendChild(cell);
+  });
+}
+
+function playIntervalTone(degree, keyIdx) {
+  const ac = getAudioContext();
+  const baseFreqs = [261.63, 293.66, 329.63, 349.23, 392, 440, 493.88];
+  const f = baseFreqs[degree % baseFreqs.length];
+  const osc = ac.createOscillator();
+  const g = ac.createGain();
+  osc.connect(g); g.connect(ac.destination);
+  osc.frequency.value = f;
+  osc.type = 'sine';
+  g.gain.setValueAtTime(0.2, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.8);
+  osc.start(ac.currentTime);
+  osc.stop(ac.currentTime + 0.8);
+}
+
+// ==================== TAB NAVIGATION ====================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel-view').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+  });
+});
+
+// ==================== CONTROLS ====================
+document.getElementById('playBtn').addEventListener('click', () => {
+  if (isPlaying) stopSequencer(); else startSequencer();
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  stopSequencer();
+  gridState = INSTRUMENTS.map(() => new Array(16).fill(0));
+  buildSequencer();
+});
+
+document.getElementById('presetBtn').addEventListener('click', () => loadPreset(BOOM_BAP_PRESET));
+document.getElementById('swingPreset').addEventListener('click', () => loadPreset(SYNCO_PRESET));
+
+document.getElementById('bpmSlider').addEventListener('input', e => {
+  bpm = parseInt(e.target.value);
+  document.getElementById('bpmVal').textContent = bpm;
+  document.getElementById('bpmDisplay').textContent = bpm;
+  restartIfPlaying();
+});
+
+document.getElementById('swingSlider').addEventListener('input', e => {
+  swingAmount = parseInt(e.target.value);
+  document.getElementById('swingVal').textContent = swingAmount + '%';
+  buildSwingViz(swingAmount);
+});
+
+document.getElementById('grooveSlider').addEventListener('input', e => {
+  const val = parseInt(e.target.value);
+  document.getElementById('grooveVal').textContent = val + '%';
+  buildSwingViz(val);
+  swingAmount = val;
+});
+
+document.getElementById('flowSlider').addEventListener('input', e => {
+  document.getElementById('flowVal').textContent = e.target.value;
+});
+
+document.getElementById('animateBtn').addEventListener('click', () => {
+  animateLyrics = true;
+  animateLyricFlow();
+});
+
+document.getElementById('stopAnimBtn').addEventListener('click', () => {
+  animateLyrics = false;
+  clearTimeout(lyricAnimTimer);
+  document.querySelectorAll('.syllable').forEach(s => s.classList.remove('lit'));
+});
+
+// ==================== INIT ====================
+buildSequencer();
+buildLyricGrid();
+buildTheoryGrid();
+buildEQ();
+buildSwingViz(0);
+buildSampleLayers();
+setWave('kick');
+drawCircle(0);
+updateKeyInfo(0);
+buildIntervalRow(0);
+</script>
+</body>
+</html>
